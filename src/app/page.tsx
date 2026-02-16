@@ -16,12 +16,14 @@ import {
 import { Clock, Users, DollarSign, Share2 } from "lucide-react";
 import {
   type Employee,
+  type TimeEntry,
   getEmployees,
   addEmployee,
   updateEmployee,
   deleteEmployee,
   clockIn,
   clockOut,
+  updateEntry,
 } from "@/lib/timesheet-store";
 import { TodayTab } from "@/components/today-tab";
 import { EmployeesTab } from "@/components/employees-tab";
@@ -38,6 +40,11 @@ export default function HomePage() {
   const [formName, setFormName] = useState("");
   const [formRate, setFormRate] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
+
+  // Time edit dialog state
+  const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
+  const [formClockIn, setFormClockIn] = useState("");
+  const [formClockOut, setFormClockOut] = useState("");
 
   const reload = () => setEmployees(getEmployees());
 
@@ -80,6 +87,24 @@ export default function HomePage() {
     if (!deleteTarget) return;
     deleteEmployee(deleteTarget.id);
     setDeleteTarget(null);
+    reload();
+  }
+
+  // ── Time Edit ─────────────────────────────────
+
+  function openEditEntry(entry: TimeEntry) {
+    setEditingEntry(entry);
+    setFormClockIn(entry.clockIn);
+    setFormClockOut(entry.clockOut ?? "");
+  }
+
+  function handleSaveTime() {
+    if (!editingEntry || !formClockIn) return;
+    updateEntry(editingEntry.id, {
+      clockIn: formClockIn,
+      clockOut: formClockOut || null,
+    });
+    setEditingEntry(null);
     reload();
   }
 
@@ -152,6 +177,7 @@ export default function HomePage() {
               employees={employees}
               onClockIn={handleClockIn}
               onClockOut={handleClockOut}
+              onEditEntry={openEditEntry}
             />
           </TabsContent>
 
@@ -210,6 +236,47 @@ export default function HomePage() {
               {t.cancel}
             </Button>
             <Button onClick={handleSave}>{t.save}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Time Dialog */}
+      <Dialog
+        open={!!editingEntry}
+        onOpenChange={() => setEditingEntry(null)}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t.editTime}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t.clockInTime}</Label>
+              <Input
+                type="time"
+                value={formClockIn}
+                onChange={(e) => setFormClockIn(e.target.value)}
+              />
+            </div>
+            {editingEntry?.clockOut !== undefined && (
+              <div className="space-y-2">
+                <Label>{t.clockOutTime}</Label>
+                <Input
+                  type="time"
+                  value={formClockOut}
+                  onChange={(e) => setFormClockOut(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditingEntry(null)}
+            >
+              {t.cancel}
+            </Button>
+            <Button onClick={handleSaveTime}>{t.save}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

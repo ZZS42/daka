@@ -51,6 +51,11 @@ export const zh = {
   shareWages: "分享工资单",
   copied: "已复制到剪贴板",
   wageReport: "工资报告",
+
+  // Edit time
+  editTime: "修改时间",
+  clockInTime: "上班时间",
+  clockOutTime: "下班时间",
 };
 
 export type Translations = typeof zh;
@@ -105,4 +110,9 @@ export const en: Translations = {
   shareWages: "Share Wages",
   copied: "Copied to clipboard",
   wageReport: "Wage Report",
+
+  // Edit time
+  editTime: "Edit Time",
+  clockInTime: "Clock In Time",
+  clockOutTime: "Clock Out Time",
 };

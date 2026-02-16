@@ -119,6 +119,16 @@ export function clockOut(entryId: string) {
   saveEntries(list);
 }
 
+export function updateEntry(
+  entryId: string,
+  updates: { clockIn?: string; clockOut?: string | null },
+) {
+  const list = getEntries().map((e) =>
+    e.id === entryId ? { ...e, ...updates } : e,
+  );
+  saveEntries(list);
+}
+
 // ── Queries ──────────────────────────────────────
 
 export function todayEntries(employeeId: string): TimeEntry[] {
