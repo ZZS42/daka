@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useLocale, LocalePicker } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ import { SummaryTab } from "@/components/summary-tab";
 
 export default function HomePage() {
   const { t } = useLocale();
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>(() => getEmployees());
   const [, setTick] = useState(0);
 
   // Dialog state
@@ -39,11 +39,7 @@ export default function HomePage() {
   const [formRate, setFormRate] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
 
-  const reload = useCallback(() => setEmployees(getEmployees()), []);
-
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  const reload = () => setEmployees(getEmployees());
 
   // Tick every 30s for live working hours
   useEffect(() => {
