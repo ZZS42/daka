@@ -1,65 +1,242 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect, useCallback } from "react";
+import { useLocale, LocalePicker } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Clock, Users, DollarSign, Share2 } from "lucide-react";
+import {
+  type Employee,
+  getEmployees,
+  addEmployee,
+  updateEmployee,
+  deleteEmployee,
+  clockIn,
+  clockOut,
+} from "@/lib/timesheet-store";
+import { TodayTab } from "@/components/today-tab";
+import { EmployeesTab } from "@/components/employees-tab";
+import { SummaryTab } from "@/components/summary-tab";
+
+export default function HomePage() {
+  const { t } = useLocale();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [, setTick] = useState(0);
+
+  // Dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEmp, setEditingEmp] = useState<Employee | null>(null);
+  const [formName, setFormName] = useState("");
+  const [formRate, setFormRate] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
+
+  const reload = useCallback(() => setEmployees(getEmployees()), []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  // Tick every 30s for live working hours
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // ── Employee Dialog ────────────────────────────
+
+  function openAdd() {
+    setEditingEmp(null);
+    setFormName("");
+    setFormRate("");
+    setDialogOpen(true);
+  }
+
+  function openEdit(emp: Employee) {
+    setEditingEmp(emp);
+    setFormName(emp.name);
+    setFormRate(String(emp.hourlyRate));
+    setDialogOpen(true);
+  }
+
+  function handleSave() {
+    const name = formName.trim();
+    const rate = parseFloat(formRate);
+    if (!name || isNaN(rate) || rate <= 0) return;
+    if (editingEmp) {
+      updateEmployee(editingEmp.id, { name, hourlyRate: rate });
+    } else {
+      addEmployee(name, rate);
+    }
+    setDialogOpen(false);
+    reload();
+  }
+
+  function handleDelete() {
+    if (!deleteTarget) return;
+    deleteEmployee(deleteTarget.id);
+    setDeleteTarget(null);
+    reload();
+  }
+
+  // ── Clock Actions ──────────────────────────────
+
+  function handleClockIn(empId: string) {
+    clockIn(empId);
+    reload();
+  }
+
+  function handleClockOut(entryId: string) {
+    clockOut(entryId);
+    reload();
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="sticky top-0 z-10 border-b bg-white px-4 py-3">
+        <div className="mx-auto flex max-w-lg items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" />
+            <h1 className="text-lg font-bold">{t.title}</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={async () => {
+                try {
+                  const url = window.location.href;
+                  if (navigator.share) {
+                    await navigator.share({ title: t.title, url });
+                  } else {
+                    await navigator.clipboard.writeText(url);
+                    alert(t.copied);
+                  }
+                } catch {
+                  // User cancelled share sheet
+                }
+              }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <LocalePicker />
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+      </header>
+
+      <main className="mx-auto max-w-lg px-4 py-4">
+        <Tabs defaultValue="today">
+          <TabsList className="w-full">
+            <TabsTrigger value="today" className="flex-1">
+              <Clock className="mr-1 h-4 w-4" />
+              {t.todayTab}
+            </TabsTrigger>
+            <TabsTrigger value="employees" className="flex-1">
+              <Users className="mr-1 h-4 w-4" />
+              {t.employeesTab}
+            </TabsTrigger>
+            <TabsTrigger value="summary" className="flex-1">
+              <DollarSign className="mr-1 h-4 w-4" />
+              {t.summaryTab}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="today" className="mt-4">
+            <TodayTab
+              employees={employees}
+              onClockIn={handleClockIn}
+              onClockOut={handleClockOut}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="employees" className="mt-4">
+            <EmployeesTab
+              employees={employees}
+              onAdd={openAdd}
+              onEdit={openEdit}
+              onDelete={setDeleteTarget}
+            />
+          </TabsContent>
+
+          <TabsContent value="summary" className="mt-4">
+            <SummaryTab employees={employees} />
+          </TabsContent>
+        </Tabs>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          {t.poweredBy}
+        </p>
       </main>
+
+      {/* Add/Edit Employee Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {editingEmp ? t.editEmployee : t.addEmployee}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t.employeeName}</Label>
+              <Input
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder={t.namePlaceholder}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t.hourlyRate}</Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.5"
+                value={formRate}
+                onChange={(e) => setFormRate(e.target.value)}
+                placeholder={t.ratePlaceholder}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              {t.cancel}
+            </Button>
+            <Button onClick={handleSave}>{t.save}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {t.delete} {deleteTarget?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">{t.deleteConfirm}</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              {t.cancel}
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              {t.confirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
