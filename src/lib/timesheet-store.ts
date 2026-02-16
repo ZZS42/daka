@@ -4,6 +4,7 @@ export interface Employee {
   id: string;
   name: string;
   hourlyRate: number;
+  pin?: string;
 }
 
 export interface TimeEntry {
@@ -51,9 +52,10 @@ function saveEmployees(list: Employee[]) {
   safeSet(EMP_KEY, JSON.stringify(list));
 }
 
-export function addEmployee(name: string, hourlyRate: number): Employee {
+export function addEmployee(name: string, hourlyRate: number, pin?: string): Employee {
   const list = getEmployees();
   const emp: Employee = { id: `emp-${Date.now()}`, name, hourlyRate };
+  if (pin) emp.pin = pin;
   list.push(emp);
   saveEmployees(list);
   return emp;
@@ -61,7 +63,7 @@ export function addEmployee(name: string, hourlyRate: number): Employee {
 
 export function updateEmployee(
   id: string,
-  updates: Partial<Pick<Employee, "name" | "hourlyRate">>,
+  updates: Partial<Pick<Employee, "name" | "hourlyRate" | "pin">>,
 ) {
   const list = getEmployees().map((e) =>
     e.id === id ? { ...e, ...updates } : e,
@@ -73,6 +75,18 @@ export function deleteEmployee(id: string) {
   saveEmployees(getEmployees().filter((e) => e.id !== id));
   // cascade delete entries
   saveEntries(getEntries().filter((e) => e.employeeId !== id));
+}
+
+// ── PIN Lookup ───────────────────────────────────
+
+export function findByPin(pin: string): Employee | null {
+  if (!pin) return null;
+  return getEmployees().find((e) => e.pin === pin) ?? null;
+}
+
+export function isPinTaken(pin: string, excludeId?: string): boolean {
+  if (!pin) return false;
+  return getEmployees().some((e) => e.pin === pin && e.id !== excludeId);
 }
 
 // ── Time Entries ─────────────────────────────────

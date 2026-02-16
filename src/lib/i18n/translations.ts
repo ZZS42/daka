@@ -56,6 +56,19 @@ export const zh = {
   editTime: "修改时间",
   clockInTime: "上班时间",
   clockOutTime: "下班时间",
+
+  // PIN mode
+  pinMode: "打卡模式",
+  pinCode: "PIN 码",
+  enterPin: "输入 PIN 打卡",
+  wrongPin: "PIN 不存在",
+  clockedIn: "已上班",
+  clockedOut: "已下班",
+  pinPlaceholder: "4位数字",
+  pinDuplicate: "此 PIN 已被使用",
+  clear: "清除",
+  exitPinMode: "退出",
+  noPinSet: "未设置PIN",
 };
 
 export type Translations = typeof zh;
@@ -115,4 +128,17 @@ export const en: Translations = {
   editTime: "Edit Time",
   clockInTime: "Clock In Time",
   clockOutTime: "Clock Out Time",
+
+  // PIN mode
+  pinMode: "Clock Mode",
+  pinCode: "PIN",
+  enterPin: "Enter PIN to Clock",
+  wrongPin: "Invalid PIN",
+  clockedIn: "Clocked In",
+  clockedOut: "Clocked Out",
+  pinPlaceholder: "4 digits",
+  pinDuplicate: "PIN already in use",
+  clear: "Clear",
+  exitPinMode: "Exit",
+  noPinSet: "No PIN",
 };

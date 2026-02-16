@@ -36,6 +36,9 @@ export function EmployeesTab({
               <p className="text-sm text-muted-foreground">
                 ${emp.hourlyRate}{t.perHour}
               </p>
+              <p className="text-xs text-muted-foreground">
+                {emp.pin ? `PIN: ${emp.pin}` : t.noPinSet}
+              </p>
             </div>
             <div className="flex gap-2">
               <Button

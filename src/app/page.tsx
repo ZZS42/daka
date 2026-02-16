@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Clock, Users, DollarSign, Share2 } from "lucide-react";
+import { Clock, Users, DollarSign, Share2, KeyRound } from "lucide-react";
 import {
   type Employee,
   type TimeEntry,
@@ -24,21 +24,27 @@ import {
   clockIn,
   clockOut,
   updateEntry,
+  isPinTaken,
 } from "@/lib/timesheet-store";
 import { TodayTab } from "@/components/today-tab";
 import { EmployeesTab } from "@/components/employees-tab";
 import { SummaryTab } from "@/components/summary-tab";
+import { PinPad } from "@/components/pin-pad";
 
 export default function HomePage() {
   const { t } = useLocale();
   const [employees, setEmployees] = useState<Employee[]>(() => getEmployees());
   const [, setTick] = useState(0);
 
+  // PIN mode
+  const [pinMode, setPinMode] = useState(false);
+
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEmp, setEditingEmp] = useState<Employee | null>(null);
   const [formName, setFormName] = useState("");
   const [formRate, setFormRate] = useState("");
+  const [formPin, setFormPin] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
 
   // Time edit dialog state
@@ -60,6 +66,7 @@ export default function HomePage() {
     setEditingEmp(null);
     setFormName("");
     setFormRate("");
+    setFormPin("");
     setDialogOpen(true);
   }
 
@@ -67,6 +74,7 @@ export default function HomePage() {
     setEditingEmp(emp);
     setFormName(emp.name);
     setFormRate(String(emp.hourlyRate));
+    setFormPin(emp.pin ?? "");
     setDialogOpen(true);
   }
 
@@ -74,10 +82,16 @@ export default function HomePage() {
     const name = formName.trim();
     const rate = parseFloat(formRate);
     if (!name || isNaN(rate) || rate <= 0) return;
+    const pin = formPin.trim();
+    if (pin && pin.length !== 4) return;
+    if (pin && isPinTaken(pin, editingEmp?.id)) {
+      alert(t.pinDuplicate);
+      return;
+    }
     if (editingEmp) {
-      updateEmployee(editingEmp.id, { name, hourlyRate: rate });
+      updateEmployee(editingEmp.id, { name, hourlyRate: rate, pin: pin || undefined });
     } else {
-      addEmployee(name, rate);
+      addEmployee(name, rate, pin || undefined);
     }
     setDialogOpen(false);
     reload();
@@ -130,6 +144,15 @@ export default function HomePage() {
             <h1 className="text-lg font-bold">{t.title}</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label={t.pinMode}
+              onClick={() => setPinMode(true)}
+            >
+              <KeyRound className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -230,6 +253,19 @@ export default function HomePage() {
                 placeholder={t.ratePlaceholder}
               />
             </div>
+            <div className="space-y-2">
+              <Label>{t.pinCode}</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                value={formPin}
+                onChange={(e) =>
+                  setFormPin(e.target.value.replace(/\D/g, ""))
+                }
+                placeholder={t.pinPlaceholder}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
@@ -280,6 +316,11 @@ export default function HomePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* PIN Mode Overlay */}
+      {pinMode && (
+        <PinPad onExit={() => setPinMode(false)} onClockAction={reload} />
+      )}
 
       {/* Delete Confirm Dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
