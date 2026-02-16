@@ -5,7 +5,7 @@
 **最后更新**: 2026-02-15
 
 ## 当前状态
-- 🟡 进行中 — 代码搬迁+重构完成，待加分享功能 + 部署
+- 🟢 MVP 已部署 — https://daka-mugi.vercel.app
 
 ## 任务清单
 - [x] Phase 0: 项目分类 → 轻量路径
@@ -18,15 +18,15 @@
 - [x] 元反思（完整代码检查 + 空思维挑战 + 跨文件一致性）
 - [x] Build 通过（1 路由 `/`）
 - [x] PWA manifest 创建
-- [ ] 分享功能：Web Share API 分享网址
-- [ ] 分享功能：工资汇总格式化文字分享
-- [ ] i18n 新增分享相关翻译 key
-- [ ] 构建验证 + 代码审查
-- [ ] Phase 3.7: 写 CLAUDE.md
-- [ ] Phase 3.8: Git + GitHub 推送
-- [ ] 部署到 Vercel
-- [ ] Phase 4: 最终验证
+- [x] 分享功能：Web Share API 分享网址 + 工资汇总格式化文字分享
+- [x] i18n 新增分享相关翻译 key（share/shareWages/copied/wageReport）
+- [x] 构建验证 + 代码自检（try/catch + 去掉无效 useCallback）
+- [x] Phase 3.7: 写 CLAUDE.md
+- [x] Phase 3.8: Git + GitHub 推送（ZZS42/daka）
+- [x] 部署到 Vercel → https://daka-mugi.vercel.app
+- [ ] Vercel 连接 GitHub 自动部署（需后台授权 GitHub App）
 - [ ] 生成 PWA 图标（192x192 + 512x512）
+- [ ] 手机实测 → 给丈母娘试用
 
 ## 上下文快照
 
@@ -76,9 +76,10 @@ daka/
 ```
 
 ## 下一步
-恢复后应该从这里开始：**分享功能开发**。
-1. 在 translations.ts 加分享相关翻译 key
-2. 在 page.tsx header 加分享按钮（Web Share API）
-3. 在 summary-tab.tsx 加工资汇总分享（格式化文字）
-4. 构建验证
-5. 写 CLAUDE.md + Git + GitHub + Vercel 部署
+恢复后应该从这里开始：**手机实测 + 用户验证**。
+1. 手机打开 https://daka-mugi.vercel.app 测试所有功能
+2. 测试"添加到主屏幕"PWA 效果
+3. 测试分享按钮（分享网址 + 工资单）
+4. 生成 PWA 图标替换 placeholder
+5. 给丈母娘 Mugi Ramen 试用
+6. Vercel 后台连接 GitHub（Settings → Git → Connect）
